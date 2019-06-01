@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title><![CDATA[Hello World]]></title>
+    <url>%2F2019%2F05%2F31%2Fhello-world%2F</url>
+    <content type="text"><![CDATA[Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick StartCreate a new post1$ hexo new "My New Post" More info: Writing Run server1$ hexo server More info: Server Generate static files1$ hexo generate More info: Generating Deploy to remote sites1$ hexo deploy More info: Deployment]]></content>
+  </entry>
+  <entry>
+    <title><![CDATA[爬虫]]></title>
+    <url>%2F2019%2F05%2F07%2Fpy%2F</url>
+    <content type="text"><![CDATA[简单的一次爬虫 题目—图书爬虫 模拟登陆URL：http://222.24.3.7:8080/opac_two/reader/infoList.jsp将借阅信息操作处理,不需要使用seleinum 爬虫实现模拟登陆的几种方法 添加 Cookie 方法：先登录将获取到的 Cookie 加入 Headers 中，最后用 GET 方法请求登录； cookie是指某些网站为了辨别用户身份、进行 session 跟踪而储存在用户本地终端上的数据（通常经过加密） POST 请求方法：需要在后台获取登录的 URL并填写请求体参数，然后 POST 请求登录； Selenium 模拟登录：代替手工操作，自动完成账号和密码的输入。 1.进行模拟登陆目标登录界面如下： 需要先登录才能看到图书借阅等信息，不用输入验证码。下面我用自己的账号和密码。来实现模拟登陆。 获取Cookie我们要先登录，获取Cookie，然后把Cookies添加到Headers中去，用GET方法请求即可。头信息如下： 模拟登陆import requests #http库 url = &apos;http://222.24.3.7:8080/opac_two/reader/infoList.jsp&apos; headers = { &apos;User-Agent&apos;: &apos;Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0&apos;, &apos;Cookie&apos;: &apos;JSESSIONID=282BFAA4C6B2BF2B6D1EBE08C75B60EC&apos;} response = requests.get(url) #模拟服务器发送get请求 response.encoding = &apos;gbk&apos; #编码方式 html = response.text #目标主页网页源码、 print(response.status_code) #获取响应状态码，返回200即成功登录 print(html)可以看到响应码是200，成功登录并获取了网页内容： 2.获取借阅历史超链接分析爬取到的源码，找到借阅历史如下图： 由于网页中id是唯一的，所以用正则表达式定位借阅历史的超链接，代码如下： div = re.findall(r&apos;&lt;div id=&quot;pageLinks&quot; &gt;.*?&lt;/div&gt;&apos;,html,re.S)[0] #不匹配不可见字符，加re.S匹配所有字符 ,[0]从列表中取出元素 jyls = re.findall(r&apos;href=&quot;(.*?)&quot;&apos;,div)[6] #jyls--借阅历史，拿到它的a标签 jylss= &quot;http://222.24.3.7:8080/opac_two/reader/%s&quot; % jyls #补全超链接返回借阅历史的超链接 3.把借阅历史提取出来代码如下 response = requests.get(jylss,headers=headers) #模拟服务器发送get请求 response.encoding = &apos;gbk&apos; #编码方式 jylss_html = response.text jy = re.findall(r&apos;&lt;table align=left&gt;(.*?)&lt;/table&gt;&apos;,jylss_html,re.S)[0] jyxq = re.findall(r&apos;&lt;td align=left &gt;(.*?)&lt;/td&gt;&apos;,jy,re.S) #借阅详情 print(jyxq) 4.清洗，处理数据可以看到数据里有一些我们不需要的字符，如”&nbsp;”,而且数据比较凌乱 for i in range(len(jyxq)): jyxq[i] = jyxq[i].replace(&apos;&amp;nbsp;&apos;,&apos;&apos;) #用空字符循环替换&amp;nbsp; i = 0 while i&lt;len(jyxq): #五个一组循环输出 print(jyxq[i:i+5]) i += 5 5.数据持久化把数据保存在文件里使数据持久化 path = &quot;D:/图书借阅信息.txt&quot; #在D盘创建图书借阅信息文本 with open(path,&apos;w&apos;) as f: #打开文件 i = 0 while i &lt; len(jyxq): f.write(str(jyxq[i:i+5])) f.write(&quot;\n&quot;) i += 5 f.close() #关闭文件]]></content>
+      <tags>
+        <tag>py</tag>
+      </tags>
+  </entry>
+</search>
